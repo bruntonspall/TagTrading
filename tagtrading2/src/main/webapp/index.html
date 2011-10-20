@@ -30,10 +30,22 @@
 
     <div class="row">
         <div class="span16">
-            <div class="lift:userSelectable">
-                <p class="loggedin">Welcome <span id="name">Name</span></p>
-                <p class="loggedout"><a class="btn" data-controls-modal="my-modal" data-backdrop="static" >Login</a> to get started</p>
-            </div>
+            <h2>Stocks</h2>
+            <table>
+                <thead>
+                <tr>
+                    <td>STock Name</td>
+                    <td>Price</td>
+                </tr>
+                </thead>
+                <tbody class="lift:stocks.all">
+                <tr>
+                    <td id="stockname">Paris</td>
+                    <td id="stockprice">125g</td>
+                </tr>
+                </tbody>
+            </table>
+            <p>Insert content here</p>
         </div>
     </div>
 
