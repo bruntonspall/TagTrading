@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>main</title>
+	<script src="/js/jquery.min.js"></script>
+	<script type="text/javascript" charset="utf-8">
+		if (!jQuery) {
+			document.write('<scri'+'pt src="http://ajax.googleapis.com/ajax/libs/jquery/1.5/jquery.min.js"></scr'+'ipt>');
+		}
+	</script>
+	<script type="text/javascript" charset="utf-8">
+		$(document).ready(function() {
+		});
+		
+	</script>
+</head>
+<body>
+<div id="buy">
+	<form method="POST">
+		<div>
+			<input type="hidden" name="stockid" value="{{stock.id}}" readonly/>
+			<label>Stock</label>
+			<input type="text" name="stock" value="{{stock.name}}" readonly/>
+			<label>Qty</label>
+			<input type="number" name="qty" value="1" min="1" max="{{stock.available}}"/>
+			<input type="submit" value="Submit" />
+		</div>
+	</form>
+</div>

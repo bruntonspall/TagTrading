@@ -1,0 +1,4 @@
+cron:
+    - description: hourly check on zeitgeist tags
+      url: /cron_jobs/zeitgeist
+      schedule: every 1 hours

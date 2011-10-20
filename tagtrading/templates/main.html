@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Tag Trading</h1>
+<p>Welcome back {{user.name}} ({{user.email}})</p>
+<p><a href="/signout">Sign out</a>
+	<div class="messages">
+		<ol>
+			{% for msg in user.get_messages %}
+			<li>{{msg.dt}} - {{msg.msg}} <a href="/message/{{msg.key}}/delete">Delete</a></li>
+			{% endfor %}
+		</ol>
+	</div>
+<h2>Your portfolio</h2>
+<table>
+	<thead>
+		<td class="direction">Purchased on</td>
+		<td class="high">Qty</td>
+		<td class="low">Purchase Price</td>
+		<td class="name">Name</td>
+		<td class="price">Current Price</td>
+		<td class="change">Direction</td>
+		<td class="change">Gain</td>
+	</thead>
+	<tbody>
+{% for stock in user.current_stocks %}
+	<tr class="tag {{stock.tag.direction}}">
+		<td>{{stock.purchase_date}}</td>
+		<td>{{stock.quantity}}</td>
+		<td>{{stock.purchase_price|currency}}</td>
+		<td>{{stock.tag.name}}</td>
+		<td>{{stock.tag.price|currency}}</td>
+		<td>{{stock.tag.direction}}</td>
+		<td>{{stock.gain}}</td>
+		<td>{{stock.on_offer}}</td>
+		<td>
+			<a href="/tag/{{stock.tag.key}}">Info</a>
+		</td>
+		<td>
+		<form method="POST" action="/stock/{{stock.key}}/offer">
+			<input name="price" type="number" min="25" value="{{stock.tag.price}}" step="25"/>
+			<input name="qty" type="number" max="{{stock.available}}" min="1" value="{{stock.available}}"/>
+			<input type="submit" value="sell"></input>
+		</form>
+		</td>
+	</tr>
+{% endfor %}
+</tbody>
+</table>
+
+<h2>Your Offers</h2>
+<table>
+	<thead>
+		<td class="direction">Type</td>
+		<td class="direction">Offer Price</td>
+		<td class="high">Quantity</td>
+		<td class="name">Name</td>
+		<td class="price">Current Price</td>
+		<td class="change">Direction</td>
+		<td class="change">Difference</td>
+	</thead>
+	<tbody>
+{% for offer in user.buy_offers  %}
+	<tr class="tag buy">
+		<td>Buy</td>
+		<td>{{offer.price|currency}}</td>
+		<td>{{offer.quantity}}</td>
+		<td class="name">{{offer.tag.name}}</td>
+		<td class="price">{{offer.tag.price|currency}}</td>
+		<td class="direction">{{offer.tag.direction}}</td>
+		<td class="direction">{{offer.difference|currency}}</td>
+	</tr>
+{% endfor %}
+{% for offer in user.sell_offers  %}
+	<tr class="tag sell">
+		<td>Sell</td>
+		<td>{{offer.price|currency}}</td>
+		<td>{{offer.quantity}}</td>
+		<td class="name">{{offer.tag.name}}</td>
+		<td class="price">{{offer.tag.price|currency}}</td>
+		<td class="direction">{{offer.tag.direction}}</td>
+		<td class="direction">{{offer.difference|currency}}</td>
+	</tr>
+{% endfor %}
+</tbody>
+</table>
+
+
+<h3>Summary</h3>
+<p>You have {{user.cash|currency}} cash on hand, and {{user.stock_total|currency}} in stocks which if sold now would fetch {{user.stock_sell_total|currency}}</p>
+
+<h2>Market View</h2>
+<table>
+	<thead>
+		<td class="direction">Direction</td>
+		<td class="high">High</td>
+		<td class="low">Low</td>
+		<td class="name">Name</td>
+		<td class="price">Price</td>
+		<td class="change">Change</td>
+		<td class="yield">Yield</td>
+		<td class="pe">P/E</td>
+		<td class="available">Available</td>
+	</thead>
+	<tbody>
+{% for tag in tags %}
+	<tr class="tag {{tag.direction}}">
+		<td class="direction">{{tag.direction}}</td>
+		<td class="high">{{tag.high|currency}}</td>
+		<td class="low">{{tag.low|currency}}</td>
+		<td class="name">{{tag.name}}</td>
+		<td class="price">{{tag.price|currency}}</td>
+		<td class="change">{{tag.change}}</td>
+		<td class="yield">{{tag.yield_}}</td>
+		<td class="pe">{{tag.pe}}</td>
+		<td class="available">{{tag.available}}</td>
+		<td class="buttons">
+			{# <a href="/tag/{{tag.key}}/buy" class="buybutton">Buy</a> #}
+			{# <a href="/offer?stock={{tag.id}}&amp;buy=false" class="offerbutton">Offer Sell</a> #}
+			{# <a href="/offer?stock={{tag.id}}&amp;buy=true" class="offerbutton">Offer Buy</a> #}
+			<a href="/tag/{{tag.key}}">Info</a>
+			<form method="POST" action="/tag/{{tag.key}}/buy">
+				<input name="price" type="number" min="25" value="{{tag.price}}" step="25"/>
+				<input name="qty" type="number" min="1" value="10"/>
+				<input type="submit" value="sell"></input>
+			</form>
+		</td>
+	</tr>
+{% endfor %}
+</tbody>
+</table>
+{% endblock %}

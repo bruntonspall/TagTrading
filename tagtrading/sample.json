@@ -1,0 +1,199 @@
+[
+    {
+        "webTitle": "Education",
+         "articles": 
+        [
+            "http://www.guardian.co.uk/education/cartoon/2011/jun/21/maths-skills-declining"
+        ],
+         "direction": "up",
+         "score": 1168,
+         "id": "education/education"
+    },
+     
+    {
+        "webTitle": "World news",
+         "articles": 
+        [
+            "http://www.guardian.co.uk/world/2011/jun/16/bilderberg-2011-tipping-point",
+             "http://www.guardian.co.uk/world/2011/jun/21/hurricane-beatriz-mexico-storms",
+             "http://www.guardian.co.uk/world/2011/jun/20/assad-script-ben-ali-mubarak",
+             "http://www.guardian.co.uk/world/2011/jun/21/russia-plane-crash-kills-44",
+             "http://www.guardian.co.uk/world/2011/jun/20/ben-ali-sentenced-35-years-jail",
+             "http://www.guardian.co.uk/world/2011/jun/20/mubarak-cancer-trial-egypt",
+             "http://www.guardian.co.uk/world/2011/jun/20/syria-president-assad-offers-concessions"
+        ],
+         "direction": "down",
+         "score": 1078,
+         "id": "world/world"
+    },
+     
+    {
+        "webTitle": "Festivals",
+         "articles": 
+        [
+            "http://www.guardian.co.uk/music/gallery/2011/jun/20/glastonbury-festival-2011-in-pictures"
+        ],
+         "direction": "new",
+         "score": 815,
+         "id": "culture/festivals"
+    },
+     
+    {
+        "webTitle": "Tennis",
+         "articles": 
+        [
+            "http://www.guardian.co.uk/sport/gallery/2011/jun/20/wimbledon"
+        ],
+         "direction": "new",
+         "score": 492,
+         "id": "sport/tennis"
+    },
+     
+    {
+        "webTitle": "Amy Winehouse",
+         "articles": 
+        [
+            "http://www.guardian.co.uk/music/2011/jun/20/amy-winehouse-belgrade-gig-valerie"
+        ],
+         "direction": "new",
+         "score": 451,
+         "id": "music/amywinehouse"
+    },
+     
+    {
+        "webTitle": "UK news",
+         "articles": 
+        [
+            "http://www.guardian.co.uk/world/2011/jun/19/skinny-dip-record-attempt-wales",
+             "http://www.guardian.co.uk/world/2011/may/29/drugs-trade-drugs"
+        ],
+         "direction": "new",
+         "score": 444,
+         "id": "uk/uk"
+    },
+     
+    {
+        "webTitle": "Scotland",
+         "articles": 
+        [
+            "http://www.guardian.co.uk/science/2011/jun/20/hadrians-wall-roman-britain-refugee-camp"
+        ],
+         "direction": "new",
+         "score": 405,
+         "id": "uk/scotland"
+    },
+     
+    {
+        "webTitle": "United States",
+         "articles": 
+        [
+            "http://www.guardian.co.uk/world/richard-adams-blog/2011/jun/20/republicans-barack-obama-impersonator",
+             "http://www.guardian.co.uk/world/2011/jun/21/john-mccain-blames-immigrants-wildfires",
+             "http://www.guardian.co.uk/world/2011/jun/20/california-death-penalty-execution-costs"
+        ],
+         "direction": "new",
+         "score": 405,
+         "id": "world/usa"
+    },
+     
+    {
+        "webTitle": "Malawi",
+         "articles": 
+        [
+            "http://www.guardian.co.uk/global-development/gallery/2011/jun/20/maternal-health-malawi-in-pictures"
+        ],
+         "direction": "new",
+         "score": 352,
+         "id": "world/malawi"
+    },
+     
+    {
+        "webTitle": "Glastonbury 2011",
+         "articles": 
+        [
+            "http://www.guardian.co.uk/music/video/2011/jun/20/u2-rehearsing-glastonbury-video"
+        ],
+         "direction": "new",
+         "score": 322,
+         "id": "music/glastonbury-2011"
+    },
+     
+    {
+        "webTitle": "Wildlife",
+         "articles": 
+        [
+            "http://www.guardian.co.uk/environment/2011/jun/20/marine-life-oceans-extinction-threat"
+        ],
+         "direction": "new",
+         "score": 292,
+         "id": "environment/wildlife"
+    },
+     
+    {
+        "webTitle": "Art and design",
+         "articles": 
+        [
+            "http://www.guardian.co.uk/world/2011/jun/17/vancouver-riot-kiss-photograph-mystery",
+             "http://www.guardian.co.uk/world/2011/jun/17/vancouver-kiss-couple-riot-police"
+        ],
+         "direction": "new",
+         "score": 276,
+         "id": "artanddesign/artanddesign"
+    },
+     
+    {
+        "webTitle": "Michael Bay",
+         "articles": 
+        [
+            "http://www.guardian.co.uk/film/2011/jun/20/steven-spielberg-megan-fox-transformers"
+        ],
+         "direction": "new",
+         "score": 257,
+         "id": "film/michael-bay"
+    },
+     
+    {
+        "webTitle": "Chris Ofili",
+         "articles": 
+        [
+            "http://www.guardian.co.uk/artanddesign/2011/jun/21/top-british-artists-design-olympics-posters"
+        ],
+         "direction": "new",
+         "score": 250,
+         "id": "artanddesign/chris-ofili"
+    },
+     
+    {
+        "webTitle": "Religion",
+         "articles": 
+        [
+            "http://www.guardian.co.uk/artanddesign/gallery/2011/jun/20/treasures-of-heaven-british-museum-in-pictures"
+        ],
+         "direction": "new",
+         "score": 236,
+         "id": "world/religion"
+    },
+     
+    {
+        "webTitle": "Welfare",
+         "articles": 
+        [
+            "http://www.guardian.co.uk/commentisfree/2011/jun/20/doublethink-on-absent-fathers"
+        ],
+         "direction": "new",
+         "score": 301,
+         "id": "politics/welfare"
+    },
+     
+    {
+        "webTitle": "Libya",
+         "articles": 
+        [
+            "http://www.guardian.co.uk/world/2011/jun/20/libya-nato-missile-attack-children",
+             "http://www.guardian.co.uk/commentisfree/cartoon/2011/jun/21/cost-nato-action-libya-cartoon"
+        ],
+         "direction": "new",
+         "score": 176,
+         "id": "world/libya"
+    }
+]
