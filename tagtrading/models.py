@@ -49,6 +49,12 @@ class Tag(db.Model):
     def available(self):
         return sum([offer.quantity for offer in self.offer_set])
 
+    def minprice(self):
+        return self.price - (self.price/10)
+    def maxprice(self):
+        return self.price + (self.price/10)
+
+
 class UserDetails(db.Model):
     email = db.EmailProperty()
     name = db.StringProperty()
@@ -59,10 +65,10 @@ class UserDetails(db.Model):
         return users[0]
 
     def stock_total(self):
-        return sum([stock.purchase_price * stock.quantity for stock in self.stock_set])
-
-    def stock_sell_total(self):
         return sum([stock.tag.price * stock.quantity for stock in self.stock_set])
+
+    def worth(self):
+        return self.stock_total() + self.cash
 
     def current_stocks(self):
         return Stock.all().filter('user =',self).order("tag")
@@ -165,19 +171,21 @@ class Offer(db.Model):
     min_price = db.IntegerProperty(default=0)
 
     @classmethod
-    def create(klass, tag, price, qty, user):
-        offername = "%s-%d" % (tag.name, price)
-        offer = klass(user=user, tag=tag, quantity=qty, min_price=price)
+    def create(klass, tag, min_price, qty, user):
+        offername = "%s-%d" % (tag.name, min_price)
+        offer = klass(user=user, tag=tag, quantity=qty, min_price=min_price)
         offer.put()
 
     @classmethod
     def find_all(klass, tag):
-        return klass.all().filter('tag =', tag).order('-min_price')
+        return klass.all().filter('tag =', tag).order('min_price')
 
     def fulfill(self, qty, price, otheruser):
         logging.info("fulfilling offer for %d at %d" % (qty, price))
 
         if self.user.pay_for_offer(self, qty, price):
+            self.tag.price = price
+            self.tag.put()
             self.quantity -= qty
             if self.quantity:
                 self.put()
@@ -186,7 +194,7 @@ class Offer(db.Model):
             otheruser.add_stock(self.tag, qty, price)
 
     def difference(self):
-        return self.price - self.tag.price
+        return self.min_price - self.tag.price
     def sellqty(self):
         if not self.buy:
             return self.quantity

@@ -27,26 +27,16 @@
 		<li class="span4">Change</li><li class="span4">{{tag.change}}</li>
 		<li class="span4">Direction</li><li class="span4">{{tag.direction}}</li>
 	</ul>
-<h3>Market Ladder</h3>
+<h3>Stocks for sale</h3>
 <table>
 	<tr>
-		<th>Buy</th>
+		<th>Seller</th>
 		<th>Price</th>
-		<th>Sell</th>
 	</tr>
-	{% for offer in tag.ladder %}
+	{% for offer in tag.offer_set %}
 	<tr>
-		<td>{{offer.sellqty}}</td>
-		<td>{{offer.price}}</td>
-		<td>{{offer.buyqty}}</td>
-		{% if offer.sellqty %}
-		<td>
-			<form method="POST" action="/tag/{{tag.key}}/offer/{{offer.price}}">
-				<input type="number" max="{{offer.sellqty}}" min="1" value="{{offer.sellqty}}"/>
-				<input type="submit" value="buy"></input>
-			</form>
-		</td>
-		{% endif %}
+		<td>{{offer.user.name}}</td>
+		<td>{{offer.min_price}}</td>
 	</tr>
 	{% endfor %}
 </table>

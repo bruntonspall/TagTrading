@@ -82,28 +82,35 @@ class OfferBuyHandler(webapp.RequestHandler):
     @loggedin
     def post(self, user, tagid):
         qty = int(self.request.get('qty'))
+        price = int(self.request.get('price'))
         tag = Tag.get(tagid)
-        logging.info('Trying to buy %d of "%s" which has %d available' % (qty, tag.name, tag.available))
+        logging.info('Trying to buy %s of "%s" which has %s available' % (qty, tag.name, tag.available()))
 
         if tag and qty <= tag.available:
             # Go through sell offers and find one that is the best value for seller
 
             found = 0
+            total = 0
+            original_qty = qty
             accepted_offers = []
             for offer in Offer.find_all(tag):
-                logging.info("Offer for %s found for %d items" % (offer.tag.name, offer.quantity))
-                found += offer.quantity
-                accepted_offers.append(offer)
-                if found > qty:
-                    #We can now stop looking at offers, and start accepting the offers
-                    break
+                logging.info("Offer for %s found for %d items at %s" % (offer.tag.name, offer.quantity, offer.min_price))
+                if offer.min_price <= price:
+                    found += offer.quantity
+                    accepted_offers.append(offer)
+                    if found > qty:
+                        #We can now stop looking at offers, and start accepting the offers
+                        break
             logging.info("Offers found, now fulfilling each offer")
             for offer in accepted_offers:
-                logging.info("Offer for %d found" % (offer.quantity))
+                logging.info("%d left - Offer for %d items at %s" % (qty, offer.quantity, offer.min_price))
 
                 if qty > 0:
-                    offer.fulfill(min(qty,offer.quantity), tag.price, user)
-                    qty -= offer.quantity
+                    available = offer.quantity
+                    total += offer.min_price * offer.quantity
+                    offer.fulfill(min(qty,offer.quantity), offer.min_price, user)
+                    qty -= available
+
 
         self.redirect('/')
 
@@ -113,8 +120,9 @@ class OfferSellHandler(webapp.RequestHandler):
         qty = int(self.request.get('qty'))
         price = int(self.request.get('price'))
         stock = Stock.get(stockid)
+        logging.info("Trying to sell %d of %s" % (qty, stock.tag.name))
         if stock:
-            Offer.create(tag=stock.tag, price=price, qty=qty, buy=False, user=user)
+            Offer.create( user=user, tag=stock.tag, qty=qty, min_price=price)
             if stock.on_offer:
                 stock.on_offer+=qty
             else:
@@ -132,7 +140,7 @@ class SignInHandler(webapp.RequestHandler):
 
     def post(self):
         email = self.request.get('email')
-        user = UserDetails.get_or_insert(email, email=email, name='Joe Bloggs', cash=50000)
+        user = UserDetails.get_or_insert(email, email=email, name='Joe Bloggs', cash=500)
         set_cookie(self, 'loggedin',email)
         self.redirect('/')
 

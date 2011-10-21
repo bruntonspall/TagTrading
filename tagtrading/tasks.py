@@ -26,7 +26,7 @@ class NewTagHandler(webapp.RequestHandler):
 class TagUpdateHandler(webapp.RequestHandler):
     def post(self):
         tagid = self.request.get('id')
-        score = int(self.request.get('score'))
+        score = int(self.request.get('score'))/100
         name = self.request.get('webTitle')
         articles = self.request.get_all('articles')
         dividend = (score / 10)
@@ -42,6 +42,7 @@ class TagUpdateHandler(webapp.RequestHandler):
             for stock in [stock for stock in tag.stock_set]:
                 paid_dividend = dividend * stock.quantity
                 stock.user.pay_dividend(stock, paid_dividend)
+            tag.open_price = tag.price
             tag.add_dividend(dividend)
             tag.put()
 

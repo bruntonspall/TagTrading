@@ -6,8 +6,17 @@
 	<div class="modal-header"><h1>Buy <%name%></h1></div>
 	<div class="modal-body">
 	<form action="/tag/<%key%>/buy" method="POST">
-	<input type="number" name="qty" value="<%maxqty%>"  min="1" max="<%maxqty%>" id="qty">
-	<input type="submit" name="buy" value="Buy" id="buy" />
+	<div class="clearfix">
+	<label for="price" class="span4">Max Price</label>
+	<input class="span4" type="number" name="price" value="<%price%>"  min="<%minprice%>" max="<%maxprice%>" id="price">
+	</div>
+	<div class="clearfix">
+	<label class="span4" for="qty">Quantity</label>
+	<input class="span4" type="number" name="qty" value="<%maxqty%>"  min="1" max="<%maxqty%>" id="qty">
+	</div>
+	<div class="clearfix">
+	<input class="span8 btn primary" type="submit" name="buy" value="Buy" id="buy" />
+	</div>
 	</form>
 	</div>
 	<div class="modal-footer"></div>
@@ -16,9 +25,19 @@
 	<div class="modal-header"><h1>Offer <%name%></h1></div>
 	<div class="modal-body">
 	<form action="/stock/<%key%>/offer" method="POST">
+	<div class="clearfix">
+	<label for="price">Max Price</label>
+	<input type="number" name="price" value="<%price%>"  min="<%minprice%>" max="<%maxprice%>" id="price">
+	</div>
+	<div class="clearfix">
+	<label for="qty">Quantity</label>
 	<input type="number" name="qty" value="<%maxqty%>"  min="1" max="<%maxqty%>" id="qty">
-	<input type="submit" name="offer" value="Offer" id="offer" />
+	</div>
+	<div class="clearfix">
+	<input class="btn primary" type="submit" name="offer" value="Offer" id="offer" />
+	</div>
 	</form>
+
 	</div>
 	<div class="modal-footer"></div>
 </script>
@@ -26,8 +45,9 @@
 
 var erb = tim.parser({start:"<%", end:"%>", type:"text/tim+erb"});
 
-function display(id, name, tagid, maxqty) {
-	$("#"+id).html(erb(id, {name: name, key: tagid, maxqty: maxqty}));
+function display(id, name, data) {
+	data['name'] = name
+	$("#"+id).html(erb(id, data));
 	$("#"+id).modal({keyboard: true, backdrop: true, show: true});
 }
 </script>
@@ -48,11 +68,11 @@ function display(id, name, tagid, maxqty) {
 <h2>Your portfolio</h2>
 <table>
 	<thead>
-		<td class="high">Qty</td>
-		<td class="name">Name</td>
-		<td class="price">Current Price</td>
-		<td class="price">On Offer</td>
-		<td>Actions</td>
+		<th class="high">Qty</th>
+		<th class="name">Name</th>
+		<th class="price">Current Price</th>
+		<th class="price">On Offer</th>
+		<th>Actions</th>
 	</thead>
 	<tbody>
 {% for stock in user.current_stocks %}
@@ -63,14 +83,21 @@ function display(id, name, tagid, maxqty) {
 		<td>{{stock.on_offer}}</td>
 		<td>
 			<a class="btn" href="/tag/{{stock.tag.key}}">Info</a>
-			<a class="btn" onclick="display('offer-modal', '{{stock.tag.name}}', '{{stock.key}}', '{{stock.quantity}}')" >Offer</a>
+			<a class="btn" onclick="display('offer-modal', '{{stock.tag.name}}',
+			{
+				key:'{{stock.key}}',
+				price:'{{stock.tag.price}}',
+				maxprice:'{{stock.tag.maxprice}}',
+				minprice:'{{stock.tag.minprice}}',
+				maxqty:'{{stock.available}}'
+			})" >Offer</a>
 		</td>
-		<td>
+		<!-- <td>
 		<form method="POST" action="/stock/{{stock.key}}/offer">
 			<input name="qty" type="number" max="{{stock.quantity}}" min="1" value="{{stock.quantity}}" class="span2"/>
 			<input type="submit" value="offer"></input>
 		</form>
-		</td>
+		</td> -->
 	</tr>
 {% endfor %}
 </tbody>
@@ -79,30 +106,19 @@ function display(id, name, tagid, maxqty) {
 <h2>Your Offers</h2>
 <table>
 	<thead>
-		<td class="direction">Type</td>
-		<td class="direction">Offer Price</td>
-		<td class="high">Quantity</td>
-		<td class="name">Name</td>
-		<td class="price">Current Price</td>
-		<td class="change">Direction</td>
-		<td class="change">Difference</td>
+		<th class="direction">Type</th>
+		<th class="direction">Offer Price</th>
+		<th class="high">Quantity</th>
+		<th class="name">Name</th>
+		<th class="price">Current Price</th>
+		<th class="change">Direction</th>
+		<th class="change">Difference</th>
 	</thead>
 	<tbody>
-{% for offer in user.buy_offers  %}
-	<tr class="tag buy">
-		<td>Buy</td>
-		<td>{{offer.price|currency}}</td>
-		<td>{{offer.quantity}}</td>
-		<td class="name">{{offer.tag.name}}</td>
-		<td class="price">{{offer.tag.price|currency}}</td>
-		<td class="direction">{{offer.tag.direction}}</td>
-		<td class="direction">{{offer.difference|currency}}</td>
-	</tr>
-{% endfor %}
 {% for offer in user.sell_offers  %}
 	<tr class="tag sell">
 		<td>Sell</td>
-		<td>{{offer.price|currency}}</td>
+		<td>{{offer.min_price|currency}}</td>
 		<td>{{offer.quantity}}</td>
 		<td class="name">{{offer.tag.name}}</td>
 		<td class="price">{{offer.tag.price|currency}}</td>
@@ -115,36 +131,40 @@ function display(id, name, tagid, maxqty) {
 
 
 <h3>Summary</h3>
-<p>You have {{user.cash|currency}} cash on hand, and {{user.stock_total|currency}} in stocks which if sold now would fetch {{user.stock_sell_total|currency}}</p>
+<p>You have {{user.cash|currency}} cash on hand, and {{user.stock_total|currency}} in stocks</p>
+<p>You are therefore worth {{user.worth}} grauniads</p>
 
 <h2>Market View</h2>
 <table>
 	<thead>
-		<td class="direction">Direction</td>
-		<td class="high">High</td>
-		<td class="low">Low</td>
-		<td class="name">Name</td>
-		<td class="price">Price</td>
-		<td class="change">Change</td>
-		<td class="yield">Yield</td>
-		<td class="pe">P/E</td>
-		<td class="available">Available</td>
-	</thead>
+		<tr>
+		<th>Name</th>
+		<th>Price</th>
+		<th>Change</th>
+		<th>Direction</th>
+		<th>Yield</th>
+		<th>Available</th>
+		<th>Actions</th>
+		</tr>
+		</thead>
 	<tbody>
 {% for tag in tags %}
 	<tr class="tag {{tag.direction}}">
-		<td class="direction">{{tag.direction}}</td>
-		<td class="high">{{tag.high|currency}}</td>
-		<td class="low">{{tag.low|currency}}</td>
 		<td class="name">{{tag.name}}</td>
 		<td class="price">{{tag.price|currency}}</td>
 		<td class="change">{{tag.change}}</td>
+		<td class="direction">{{tag.direction}}</td>
 		<td class="yield">{{tag.yield_}}</td>
-		<td class="pe">{{tag.pe}}</td>
 		<td class="available">{{tag.available}}</td>
 		<td class="buttons">
 			<a class="btn" href="/tag/{{tag.key}}">Info</a>
-			<a class="btn" onclick="display('buy-modal', '{{tag.name}}', '{{tag.key}}', '{{tag.available}}')" >Buy</a>
+			<a class="btn" onclick="display('buy-modal', '{{tag.name}}', {
+				key:'{{tag.key}}',
+				maxqty: '{{tag.available}}',
+				price:'{{tag.price}}',
+				maxprice:'{{tag.maxprice}}',
+				minprice:'{{tag.minprice}}',
+				})" >Buy</a>
 		</td>
 	</tr>
 {% endfor %}

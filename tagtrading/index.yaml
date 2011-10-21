@@ -41,6 +41,11 @@ indexes:
   properties:
   - name: tag
   - name: min_price
+
+- kind: Offer
+  properties:
+  - name: tag
+  - name: min_price
     direction: desc
 
 - kind: Offer
