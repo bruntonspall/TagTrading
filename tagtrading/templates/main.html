@@ -1,4 +1,27 @@
 {% extends "base.html" %}
+{% block script %}
+<script type="text/javascript" src="/js/tim.js"></script>
+
+<script type="text/tim+erb" class="foo">
+<div id="buy-modal" class="modal">
+	<div class="modal-header"><h1>Buy <%name%></h1></div>
+	<div class="modal-body"></div>
+	<div class="modal-footer"><a class="btn" onclick="$.post('/offer/<%tagid%>/buy'); $('#buy-modal').modal('hide')">Buy</a></div>
+</div></script>
+<script type="text/javascript" charset="utf-8">
+
+var erb = tim.parser({start:"<%", end:"%>", type:"text/tim+erb"});
+
+function display(id, name, tagid) {
+	var data = {
+		name: name,
+		tagid: tagid
+	};
+	$(id).html(erb("foo", data));
+	$(id).modal({keyboard: true, backdrop: true});
+}
+</script>
+{% endblock %}
 {% block content %}
 <h1>Tag Trading</h1>
 <p>Welcome back {{user.name}} ({{user.email}})</p>
@@ -10,6 +33,7 @@
 			{% endfor %}
 		</ol>
 	</div>
+	<div id='buy-modal'></div>
 <h2>Your portfolio</h2>
 <table>
 	<thead>
@@ -117,12 +141,8 @@
 			{# <a href="/tag/{{tag.key}}/buy" class="buybutton">Buy</a> #}
 			{# <a href="/offer?stock={{tag.id}}&amp;buy=false" class="offerbutton">Offer Sell</a> #}
 			{# <a href="/offer?stock={{tag.id}}&amp;buy=true" class="offerbutton">Offer Buy</a> #}
-			<a href="/tag/{{tag.key}}">Info</a>
-			<form method="POST" action="/tag/{{tag.key}}/buy">
-				<input name="price" type="number" min="25" value="{{tag.price}}" step="25"/>
-				<input name="qty" type="number" min="1" value="10"/>
-				<input type="submit" value="sell"></input>
-			</form>
+			<a class="btn" href="/tag/{{tag.key}}">Info</a>
+			<a class="btn" onclick="display('#buy-modal', '{{tag.name}}', '{{tag.id}}')" >Buy</a>
 		</td>
 	</tr>
 {% endfor %}
