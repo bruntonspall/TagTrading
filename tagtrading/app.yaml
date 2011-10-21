@@ -7,6 +7,9 @@ handlers:
 - url: /js/(.*)
   static_files: static/js/\1
   upload: static/js/.*.js
+- url: /css/(.*)
+  static_files: static/css/\1
+  upload: static/css/.*.css
 - url: /cron_jobs/.*
   script: cron.py
 - url: /tasks/.*

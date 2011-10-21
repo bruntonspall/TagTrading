@@ -8,7 +8,8 @@ from google.appengine.ext import webapp
 register = webapp.template.create_template_register()
 
 def currency(dollars):
-    dollars = float(dollars)/100.0
-    return "$%s%s" % (intcomma(int(dollars)), ("%0.2f" % dollars)[-3:])
+    return "%sg" % (dollars)
+    # dollars = float(dollars)/100.0
+    # return "$%s%s" % (intcomma(int(dollars)), ("%0.2f" % dollars)[-3:])
 
 register.filter(currency)

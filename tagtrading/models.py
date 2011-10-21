@@ -18,7 +18,6 @@ class Tag(db.Model):
     low = db.IntegerProperty()
     dividend = db.IntegerProperty()
     open_price = db.IntegerProperty()
-    available = db.IntegerProperty(default=100)
     _history = db.TextProperty()
 
     def yield_(self):
@@ -47,8 +46,8 @@ class Tag(db.Model):
         h.append([int(time.time()*1000),price])
         self._history = json.dumps(h, indent=2)
 
-    def ladder(self):
-        return OfferBracket.all().filter('tag =',self).order('price')
+    def available(self):
+        return sum([offer.quantity for offer in self.offer_set])
 
 class UserDetails(db.Model):
     email = db.EmailProperty()
@@ -66,13 +65,10 @@ class UserDetails(db.Model):
         return sum([stock.tag.price * stock.quantity for stock in self.stock_set])
 
     def current_stocks(self):
-        return Stock.all().filter('sold =',False).filter('user =',self).order("purchase_date")
-
-    def buy_offers(self):
-        return Offer.all().filter('resolved =',False).filter('user =',self).filter('buy =',True).order("tag").order("price")
+        return Stock.all().filter('user =',self).order("tag")
 
     def sell_offers(self):
-        return Offer.all().filter('resolved =',False).filter('user =',self).filter('buy =',False).order("tag").order("price")
+        return Offer.all().filter('user =',self).order("tag").order("min_price")
 
     def make_deposit(self, value, msg):
         self.cash += value
@@ -87,17 +83,52 @@ class UserDetails(db.Model):
         self.cash += paid_dividend
         db.put([self, msg])
 
+    def add_stock(self, tag, qty, price):
+        stock = self.stock_set.filter('tag =', tag).get()
+        if not stock:
+            stock = Stock(user=self, tag=tag, quantity=0, on_offer=0)
+        stock.quantity += qty
+        self.cash -= qty*price
+        db.put([self, stock])
+
+
+    def pay_for_offer(self, offer, qty, price):
+        logging.info("Offers found, now fulfilling each offer")
+
+        stock = self.stock_set.filter('tag =', offer.tag).get()
+        logging.info("We have a stock %s" % (stock))
+        if stock and stock.quantity >= qty:
+            total = qty * price
+            msg = Message.create_message_without_put(self, 'Offer accepted for %d of %s at %s' % (qty, offer.tag.name, currency(total)))
+            self.cash += total
+            stock.quantity -= qty
+            stock.on_offer -= qty
+            db.put([self, msg, stock])
+            return True
+        return False
+
     def buy_stock(self, tag, qty):
         if tag.available >= qty:
             price = tag.price * qty
             if price <= self.cash:
-                stock = Stock(user=self, tag=tag, quantity=qty, purchase_date=datetime.now(), purchase_price=tag.price, sold=False)
+                stock = self.stock_set.filter("tag =", tag).get()
+                if stock:
+                    stock.quantity += qty
+                    stock.purchase_price = max(stock.purchase_price, tag.price)
+                    stock.put()
+                else:
+                    stock = Stock(user=self, tag=tag, quantity=qty, purchase_price=tag.price)
                 msg = Message.create_message_without_put(self, "Purchased %d of %s for %s (%s per stock)" % (qty, tag.name, currency(price), currency(tag.price)))
                 self.cash -= price
                 tag.available -= qty
                 db.put([stock, self, tag, msg])
                 return True
         return False
+
+bank = UserDetails.get_by_key_name("bank")
+if not bank:
+    bank = UserDetails(key_name="bank", email='bank@bank.com', name="The Bank of Guardian", cash=1000000000)
+    bank.put()
 
 class Message(db.Model):
     user = db.ReferenceProperty(UserDetails)
@@ -116,14 +147,10 @@ class Message(db.Model):
     def messages_for_user(klass, user):
         return klass.all().filter('user =',user).order('-dt')
 
-
 class Stock(db.Model):
     user = db.ReferenceProperty(UserDetails)
     tag = db.ReferenceProperty(Tag)
     quantity = db.IntegerProperty()
-    purchase_date = db.DateTimeProperty()
-    purchase_price = db.IntegerProperty()
-    sold = db.BooleanProperty(default=False)
     on_offer = db.IntegerProperty(default=0)
 
     def gain(self):
@@ -131,36 +158,32 @@ class Stock(db.Model):
     def available(self):
         return self.quantity - self.on_offer
 
-class OfferBracket(db.Model):
-    buy_quantity = db.IntegerProperty(default=0)
-    sell_quantity = db.IntegerProperty(default=0)
-    price = db.IntegerProperty(default=0)
-    tag = db.ReferenceProperty(Tag)
-    offers = db.StringListProperty()
-
 class Offer(db.Model):
     user = db.ReferenceProperty(UserDetails)
     tag = db.ReferenceProperty(Tag)
     quantity = db.IntegerProperty(default=0)
-    price = db.IntegerProperty(default=0)
-    buy = db.BooleanProperty()
-    resolution_date = db.DateTimeProperty()
-    resolved = db.BooleanProperty(default=False)
+    min_price = db.IntegerProperty(default=0)
 
     @classmethod
-    def create(klass, tag, price, buy, qty, user):
+    def create(klass, tag, price, qty, user):
         offername = "%s-%d" % (tag.name, price)
-        offer = klass(user=user, tag=tag, quantity=qty, price=price, buy=buy, resolved=False)
+        offer = klass(user=user, tag=tag, quantity=qty, min_price=price)
         offer.put()
-        offer_bracket = OfferBracket.get_or_insert(offername, tag=tag, price=price)
-        if buy:
-            offer_bracket.buy_quantity += qty
-        else:
-            offer_bracket.sell_quantity += qty
-        offer_bracket.offers.append(unicode(offer.key()))
-        offer_bracket.put()
-        taskqueue.add('/tasks/checkoffer', {'offer_bracket':offer_bracket.key()})
 
+    @classmethod
+    def find_all(klass, tag):
+        return klass.all().filter('tag =', tag).order('-min_price')
+
+    def fulfill(self, qty, price, otheruser):
+        logging.info("fulfilling offer for %d at %d" % (qty, price))
+
+        if self.user.pay_for_offer(self, qty, price):
+            self.quantity -= qty
+            if self.quantity:
+                self.put()
+            else:
+                self.delete()
+            otheruser.add_stock(self.tag, qty, price)
 
     def difference(self):
         return self.price - self.tag.price

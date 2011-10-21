@@ -37,6 +37,18 @@ indexes:
   - name: tag
   - name: price
 
+- kind: Offer
+  properties:
+  - name: tag
+  - name: min_price
+    direction: desc
+
+- kind: Offer
+  properties:
+  - name: user
+  - name: tag
+  - name: min_price
+
 - kind: OfferBracket
   properties:
   - name: tag
@@ -54,6 +66,11 @@ indexes:
   - name: user
   - name: tag
   - name: purchase_price
+
+- kind: Stock
+  properties:
+  - name: user
+  - name: tag
 
 - kind: TagPricePoint
   properties:

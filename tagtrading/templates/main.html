@@ -2,23 +2,33 @@
 {% block script %}
 <script type="text/javascript" src="/js/tim.js"></script>
 
-<script type="text/tim+erb" class="foo">
-<div id="buy-modal" class="modal">
+<script type="text/tim+erb" class="buy-modal">
 	<div class="modal-header"><h1>Buy <%name%></h1></div>
-	<div class="modal-body"></div>
-	<div class="modal-footer"><a class="btn" onclick="$.post('/offer/<%tagid%>/buy'); $('#buy-modal').modal('hide')">Buy</a></div>
-</div></script>
+	<div class="modal-body">
+	<form action="/tag/<%key%>/buy" method="POST">
+	<input type="number" name="qty" value="<%maxqty%>"  min="1" max="<%maxqty%>" id="qty">
+	<input type="submit" name="buy" value="Buy" id="buy" />
+	</form>
+	</div>
+	<div class="modal-footer"></div>
+</script>
+<script type="text/tim+erb" class="offer-modal">
+	<div class="modal-header"><h1>Offer <%name%></h1></div>
+	<div class="modal-body">
+	<form action="/stock/<%key%>/offer" method="POST">
+	<input type="number" name="qty" value="<%maxqty%>"  min="1" max="<%maxqty%>" id="qty">
+	<input type="submit" name="offer" value="Offer" id="offer" />
+	</form>
+	</div>
+	<div class="modal-footer"></div>
+</script>
 <script type="text/javascript" charset="utf-8">
 
 var erb = tim.parser({start:"<%", end:"%>", type:"text/tim+erb"});
 
-function display(id, name, tagid) {
-	var data = {
-		name: name,
-		tagid: tagid
-	};
-	$(id).html(erb("foo", data));
-	$(id).modal({keyboard: true, backdrop: true});
+function display(id, name, tagid, maxqty) {
+	$("#"+id).html(erb(id, {name: name, key: tagid, maxqty: maxqty}));
+	$("#"+id).modal({keyboard: true, backdrop: true, show: true});
 }
 </script>
 {% endblock %}
@@ -33,37 +43,32 @@ function display(id, name, tagid) {
 			{% endfor %}
 		</ol>
 	</div>
-	<div id='buy-modal'></div>
+	<div id='buy-modal' class='modal fade hide'></div>
+	<div id='offer-modal' class='modal fade hide'></div>
 <h2>Your portfolio</h2>
 <table>
 	<thead>
-		<td class="direction">Purchased on</td>
 		<td class="high">Qty</td>
-		<td class="low">Purchase Price</td>
 		<td class="name">Name</td>
 		<td class="price">Current Price</td>
-		<td class="change">Direction</td>
-		<td class="change">Gain</td>
+		<td class="price">On Offer</td>
+		<td>Actions</td>
 	</thead>
 	<tbody>
 {% for stock in user.current_stocks %}
 	<tr class="tag {{stock.tag.direction}}">
-		<td>{{stock.purchase_date}}</td>
 		<td>{{stock.quantity}}</td>
-		<td>{{stock.purchase_price|currency}}</td>
 		<td>{{stock.tag.name}}</td>
 		<td>{{stock.tag.price|currency}}</td>
-		<td>{{stock.tag.direction}}</td>
-		<td>{{stock.gain}}</td>
 		<td>{{stock.on_offer}}</td>
 		<td>
-			<a href="/tag/{{stock.tag.key}}">Info</a>
+			<a class="btn" href="/tag/{{stock.tag.key}}">Info</a>
+			<a class="btn" onclick="display('offer-modal', '{{stock.tag.name}}', '{{stock.key}}', '{{stock.quantity}}')" >Offer</a>
 		</td>
 		<td>
 		<form method="POST" action="/stock/{{stock.key}}/offer">
-			<input name="price" type="number" min="25" value="{{stock.tag.price}}" step="25"/>
-			<input name="qty" type="number" max="{{stock.available}}" min="1" value="{{stock.available}}"/>
-			<input type="submit" value="sell"></input>
+			<input name="qty" type="number" max="{{stock.quantity}}" min="1" value="{{stock.quantity}}" class="span2"/>
+			<input type="submit" value="offer"></input>
 		</form>
 		</td>
 	</tr>
@@ -138,11 +143,8 @@ function display(id, name, tagid) {
 		<td class="pe">{{tag.pe}}</td>
 		<td class="available">{{tag.available}}</td>
 		<td class="buttons">
-			{# <a href="/tag/{{tag.key}}/buy" class="buybutton">Buy</a> #}
-			{# <a href="/offer?stock={{tag.id}}&amp;buy=false" class="offerbutton">Offer Sell</a> #}
-			{# <a href="/offer?stock={{tag.id}}&amp;buy=true" class="offerbutton">Offer Buy</a> #}
 			<a class="btn" href="/tag/{{tag.key}}">Info</a>
-			<a class="btn" onclick="display('#buy-modal', '{{tag.name}}', '{{tag.id}}')" >Buy</a>
+			<a class="btn" onclick="display('buy-modal', '{{tag.name}}', '{{tag.key}}', '{{tag.available}}')" >Buy</a>
 		</td>
 	</tr>
 {% endfor %}

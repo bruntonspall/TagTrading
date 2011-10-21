@@ -46,7 +46,7 @@ def loggedin(f):
                 set_cookie(handler, 'loggedin', email)
             user = UserDetails.get_or_insert(email, email=email, name='Joe Bloggs', cash=50000)
             return f(handler, user, *args, **kvargs)
-    
+
         if not 'loggedin' in handler.request.cookies or not handler.request.cookies['loggedin']:
             logging.info('Redirecting to /signin')
             handler.redirect('/signin')
@@ -67,7 +67,7 @@ class MainHandler(webapp.RequestHandler):
         path = os.path.join(os.path.dirname(__file__), 'templates/main.html')
         template_values = {'tags':Tag.all(), 'user':user}
         self.response.out.write(template.render(path, template_values))
-        
+
 class TagDetailsHandler(webapp.RequestHandler):
     @loggedin
     def get(self, user, tagid):
@@ -75,64 +75,36 @@ class TagDetailsHandler(webapp.RequestHandler):
         path = os.path.join(os.path.dirname(__file__), 'templates/tag.html')
         template_values = {'tag':tag}
         self.response.out.write(template.render(path, template_values))
-        
 
-class BuyHandler(webapp.RequestHandler):
-    @loggedin
-    def get(self, user, tagid=None):
-        stock = Tag.get(tagid)
-        template_values = {'stock':stock, 'user':user}
-        path = os.path.join(os.path.dirname(__file__), 'templates/buy.html')
-        self.response.out.write(template.render(path, template_values))
-        
-    @loggedin    
-    def post(self, user, tagid):
-        qty = int(self.request.get('qty'))
-        tag = Tag.get(tagid)
-        if user.buy_stock(tag, qty):
-            self.redirect('/')
-        self.redirect('/?error=%s' % ('Failed to buy stock'.encode()))
 
-class SellHandler(webapp.RequestHandler):
-    @loggedin
-    def get(self, user, stockid):
-        stock = Stock.get(stockid)
-        template_values = {'stock':stock, 'user':user}
-        path = os.path.join(os.path.dirname(__file__), 'templates/sell.html')
-        self.response.out.write(template.render(path, template_values))
-
-    @loggedin
-    def post(self, user, stockid):
-        qty = int(self.request.get('qty'))
-        stock = Stock.get(stockid)
-        if stock.quantity >= qty:
-            price = stock.tag.price * qty
-            if stock.quantity > qty:
-                # We've not sold all stock, so adjust quanityt and create new stock record for sold stock
-                Stock(user=user, tag=stock.tag, quantity=qty, purchase_date=stock.purchase_date, purchase_price=stock.purchase_price, sold=True, sold_date=datetime.now(), sold_price=stock.tag.price).put()
-                stock.quantity = stock.quantity - qty
-            else:
-                #We've sold the lot
-                stock.sold_price = stock.tag.price
-                stock.sold_date = datetime.now()
-                stock.sold = True
-            stock.put()
-            user.cash += price
-            user.put()
-            stock.tag.available += qty
-            stock.tag.put()
-            self.redirect('/')
-            return
-        self.response.out.write('Not enough stock to sell %d of %s\nOnly %d available' % (qty, stock.tag.name, stock.quantity))
 
 class OfferBuyHandler(webapp.RequestHandler):
     @loggedin
     def post(self, user, tagid):
         qty = int(self.request.get('qty'))
-        price = int(self.request.get('price'))
         tag = Tag.get(tagid)
-        if tag:
-            Offer.create(tag=tag, price=price, qty=qty, buy=True, user=user)            
+        logging.info('Trying to buy %d of "%s" which has %d available' % (qty, tag.name, tag.available))
+
+        if tag and qty <= tag.available:
+            # Go through sell offers and find one that is the best value for seller
+
+            found = 0
+            accepted_offers = []
+            for offer in Offer.find_all(tag):
+                logging.info("Offer for %s found for %d items" % (offer.tag.name, offer.quantity))
+                found += offer.quantity
+                accepted_offers.append(offer)
+                if found > qty:
+                    #We can now stop looking at offers, and start accepting the offers
+                    break
+            logging.info("Offers found, now fulfilling each offer")
+            for offer in accepted_offers:
+                logging.info("Offer for %d found" % (offer.quantity))
+
+                if qty > 0:
+                    offer.fulfill(min(qty,offer.quantity), tag.price, user)
+                    qty -= offer.quantity
+
         self.redirect('/')
 
 class OfferSellHandler(webapp.RequestHandler):
@@ -149,7 +121,7 @@ class OfferSellHandler(webapp.RequestHandler):
                 stock.on_offer=qty
             stock.put()
         self.redirect('/')
-        
+
 class SignInHandler(webapp.RequestHandler):
     def get(self):
         if 'loggedin' in self.request.cookies and self.request.cookies['loggedin']:
@@ -157,21 +129,21 @@ class SignInHandler(webapp.RequestHandler):
         template_values = {}
         path = os.path.join(os.path.dirname(__file__), 'templates/signin.html')
         self.response.out.write(template.render(path, template_values))
-        
+
     def post(self):
         email = self.request.get('email')
         user = UserDetails.get_or_insert(email, email=email, name='Joe Bloggs', cash=50000)
         set_cookie(self, 'loggedin',email)
         self.redirect('/')
-        
+
 class SignOutHandler(webapp.RequestHandler):
     def get(self):
-        if 'loggedin' in self.request.cookies:        
+        if 'loggedin' in self.request.cookies:
             set_cookie(self, 'loggedin', '')
             self.redirect('/signin')
         else:
             self.redirect('/')
-        
+
 
 class RandomJsonHandler(webapp.RequestHandler):
     def get(self):
@@ -182,7 +154,7 @@ class RandomJsonHandler(webapp.RequestHandler):
         path = os.path.join(os.path.dirname(__file__), 'templates/random.json')
         self.response.headers["Content-Type"] = "text/javascript"
         self.response.out.write(template.render(path, {'rand':randomiser()}))
-        
+
 
 def main():
     application = webapp.WSGIApplication([
